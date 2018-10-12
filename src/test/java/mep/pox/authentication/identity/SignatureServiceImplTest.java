@@ -1,11 +1,14 @@
 package mep.pox.authentication.identity;
 
 import org.junit.Test;
+import org.springframework.util.Base64Utils;
+import reactor.core.publisher.Mono;
 
 import java.security.KeyPair;
+import java.security.Signature;
+import java.time.Duration;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class SignatureServiceImplTest {
 
@@ -28,4 +31,22 @@ public class SignatureServiceImplTest {
         // should be null
         assertNull(keys);
     }
+
+    @Test
+    public void testSigning() throws Exception {
+        SignatureServiceImpl sigService = new SignatureServiceImpl();
+        KeyPair keyPairs = sigService.initKeyPair();
+
+        Mono<String> testData = Mono.just("HelloWorld");
+        String signature = sigService.signData(testData).block(Duration.ofSeconds(30));
+
+        Signature s = Signature.getInstance("SHA256withRSA");
+
+        s.initVerify(keyPairs.getPublic());
+        s.update(testData.block(Duration.ofSeconds(30)).getBytes());
+        boolean verifySuccess = s.verify(Base64Utils.decodeFromString(signature));
+
+        assertTrue(verifySuccess);
+    }
+
 }
