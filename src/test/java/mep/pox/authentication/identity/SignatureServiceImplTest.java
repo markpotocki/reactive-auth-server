@@ -49,4 +49,19 @@ public class SignatureServiceImplTest {
         assertTrue(verifySuccess);
     }
 
+    @Test
+    public void testVerifying() throws Exception {
+        SignatureServiceImpl sigService = new SignatureServiceImpl();
+        KeyPair keyPair = sigService.initKeyPair();
+
+        Mono<String> testData = Mono.just("HelloWorld");
+        Signature s = Signature.getInstance("SHA256withRSA");
+        s.initSign(keyPair.getPrivate());
+        s.update(testData.block(Duration.ofSeconds(30)).getBytes());
+        String signature = Base64Utils.encodeToString(s.sign());
+
+        Mono<Boolean> verified = sigService.verifySignature(testData, Mono.just(signature));
+        assertTrue(verified.block(Duration.ofSeconds(30)));
+    }
+
 }

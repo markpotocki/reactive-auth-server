@@ -25,9 +25,10 @@ public interface SignatureService {
      * Checks whether the given Signature is valid and returns a boolean of true if it is a valid signature and false
      * if it is not. Valid would be a signature generated from this service's KeyPair.
      * @param data base64 encoding of the data to verify
+     * @param signature base64 encoding of the signature of the given data
      * @return True if the Signature was signed by this service and false if not
      */
-    Mono<Boolean> verifySignature(Mono<String> data);
+    Mono<Boolean> verifySignature(Mono<String> data, Mono<String> signature);
 
 
 }

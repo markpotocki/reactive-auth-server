@@ -61,22 +61,22 @@ public class SignatureServiceImpl implements SignatureService {
     @Override
     public Mono<String> signData(Mono<String> data) {
         return data
-                .map( stringData -> updateSignature(stringData.getBytes()))
-                .map( stringData -> sign());
+                .map( stringData -> updateSignature(this.signer, stringData.getBytes()))
+                .map( voidMono -> sign());
     }
 
-    private String updateSignature(byte[] byteData) {
+    private Mono<Void> updateSignature(Signature sObject, byte[] byteData) {
         try {
-            this.signer.update(byteData);
+            sObject.update(byteData);
         } catch (SignatureException se) {
             // TODO: log error of failing to update
         }
-        return byteData.toString();
+        return Mono.empty();
     }
 
     private String sign() {
         try {
-            return this.signer.sign().toString();
+            return Base64Utils.encodeToString(this.signer.sign());
         } catch (SignatureException se) {
             // TODO: log error of failing to sign
         }
@@ -84,7 +84,22 @@ public class SignatureServiceImpl implements SignatureService {
     }
 
     @Override
-    public Mono<Boolean> verifySignature(Mono<String> data) {
-        return null;
+    public Mono<Boolean> verifySignature(Mono<String> data, Mono<String> signature) {
+        return Mono
+                .zip(data, signature)
+                .map( dataSigTuple2 -> {
+                    updateSignature(this.verifier, dataSigTuple2.getT1().getBytes());
+                    return dataSigTuple2;
+                } )
+                .map( dataSigTuple2 -> verify(dataSigTuple2.getT2()));
+    }
+
+    private boolean verify(String signature) {
+        try {
+            return this.verifier.verify(Base64Utils.decodeFromString(signature));
+        } catch (SignatureException se) {
+            // TODO: log error of failing to verify
+        }
+        return false;
     }
 }
