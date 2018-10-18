@@ -47,16 +47,18 @@ public class AccessCodeService {
 
 
     public Mono<String> encodeAccessCode(AccessCodeToken code) {
-        try {
-            byte[] stringifiedCode = objectMapper.writeValueAsBytes(code);
-            return Mono.just(Base64Utils.encodeToString(this.encryptor.doFinal(stringifiedCode)));
-        } catch(JsonProcessingException jpe) {
-            log.error("Error mapping access code: Failed to map object to string");
-            return Mono.error(jpe);
-        } catch(Exception e) {
-            log.error("Error with encrypting AccessCode");
-            return Mono.error(e);
-        }
+
+        return Mono.fromSupplier( () -> {
+            try {
+                byte[] stringifiedCode = objectMapper.writeValueAsBytes(code);
+                return Base64Utils.encodeToString(this.encryptor.doFinal(stringifiedCode));
+            } catch (JsonProcessingException jpe) {
+                log.error("Error mapping access code: Failed to map object to string");
+            } catch (Exception e) {
+                log.error("Error with encrypting AccessCode");
+            }
+            return null; // TODO remove null return
+        });
     }
 
     public Mono<AccessCodeToken> decodeAccessCode(String base64EncodedEncryptedToken) {
