@@ -40,7 +40,7 @@ public class JwtToken {
     }
 
 
-    class JwtTokenHeader {
+    private class JwtTokenHeader {
         private String alg;
         private String typ;
 
@@ -50,7 +50,7 @@ public class JwtToken {
         }
     }
 
-    class JwtTokenPayload {
+    private class JwtTokenPayload {
         private String iss;
         private String sub;
         private String aud;
