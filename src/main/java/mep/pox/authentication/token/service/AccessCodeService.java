@@ -37,7 +37,8 @@ public class AccessCodeService {
                 this.keyPair = KeyPairGenerator.getInstance("RSA").generateKeyPair();
             }
             this.encryptor = Cipher.getInstance("RSA");
-            this.decryptor = Cipher.getInstance("RSA");
+            this.decryptor =
+                    Cipher.getInstance("RSA");
             this.encryptor.init(Cipher.ENCRYPT_MODE, this.keyPair.getPublic());
             this.decryptor.init(Cipher.DECRYPT_MODE, this.keyPair.getPrivate());
         } catch (Exception e) {
