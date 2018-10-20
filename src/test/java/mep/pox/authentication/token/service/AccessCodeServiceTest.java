@@ -30,14 +30,14 @@ public class AccessCodeServiceTest {
         AccessCodeService accessCodeService = new AccessCodeService(null, keyPair);
         accessCodeService.init();
 
-        AccessCodeToken testCode = new AccessCodeToken("foo", "client", "CHALLENGECODE123", "SH256");
+        AccessCodeToken testCode = new AccessCodeToken("foo", "client", "CHALLENGECODE123", "SH256", "mep.local");
         String encodedCode = accessCodeService.encodeAccessCode(testCode).block(Duration.ofSeconds(30));
         assertNotNull(encodedCode);
 
         // decode the token and check value
         Cipher c = Cipher.getInstance("RSA");
         c.init(Cipher.DECRYPT_MODE, keyPair.getPrivate());
-        AccessCodeToken actual = mapper.readValue(c.doFinal(Base64Utils.decodeFromString(encodedCode)), AccessCodeToken.class);
+        AccessCodeToken actual = mapper.readValue(c.doFinal(Base64Utils.decodeFromUrlSafeString(encodedCode)), AccessCodeToken.class);
 
         assertEquals(testCode, actual);
     }
@@ -49,10 +49,10 @@ public class AccessCodeServiceTest {
         accessCodeService.init();
 
         // encode the token
-        AccessCodeToken expected = new AccessCodeToken("foo", "client", "CHALLENGECODE123", "SH256");
+        AccessCodeToken expected = new AccessCodeToken("foo", "client", "CHALLENGECODE123", "SH256", "mep.local");
         Cipher c = Cipher.getInstance("RSA");
         c.init(Cipher.ENCRYPT_MODE, keyPair.getPublic());
-        String encoded = Base64Utils.encodeToString(c.doFinal(mapper.writeValueAsBytes(expected)));
+        String encoded = Base64Utils.encodeToUrlSafeString(c.doFinal(mapper.writeValueAsBytes(expected)));
 
         // the test
         AccessCodeToken actual = accessCodeService.decodeAccessCode(encoded).block(Duration.ofSeconds(30));

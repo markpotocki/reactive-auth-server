@@ -11,6 +11,7 @@ import javax.naming.AuthenticationException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -27,7 +28,7 @@ public class VerificationServiceImpl implements VerificationService {
                 if (verificationMethod == "SH256") {
                     MessageDigest digest = MessageDigest.getInstance("SHA-256");
                     byte[] hash = digest.digest(challenge.getBytes(StandardCharsets.UTF_8));
-                    return Base64Utils.encodeToString(hash);
+                    return Base64Utils.encodeToUrlSafeString(hash);
                 } else if (verificationMethod == "plain") {
                     return challenge;
                 } else {
@@ -47,7 +48,7 @@ public class VerificationServiceImpl implements VerificationService {
                     assertEquals(act.getRedirectUri(), redirectUri);
                     assertEquals(act.getClientId(), clientId);
                     assertEquals(act.getChallengeCode(), acTcTuple.getT2());
-                }).flatMap( tuple2 -> tokenIssuingService.issueToken(userId, clientId));
+                }).map( tuple2 -> new JwtToken(userId, List.of(clientId)));
     }
 
     private Mono<Void> assertEquals(String expected, String actual) {

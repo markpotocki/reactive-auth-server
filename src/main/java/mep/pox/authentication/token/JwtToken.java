@@ -1,5 +1,7 @@
 package mep.pox.authentication.token;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,6 +23,7 @@ public class JwtToken {
     private JwtTokenPayload payload;
 
     public JwtToken(String subject, List<String> audience) {
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         this.header = new JwtTokenHeader();
         this.payload = new JwtTokenPayload(subject, StringUtils.collectionToCommaDelimitedString(audience));
     }
@@ -34,9 +37,8 @@ public class JwtToken {
             String jsonified = mapper.writeValueAsString(o);
             return Base64Utils.encodeToString(jsonified.getBytes());
         } catch(JsonProcessingException jpe) {
-            // TODO: log this error
+            throw new RuntimeException(jpe);
         }
-        return null;
     }
 
 
