@@ -8,7 +8,6 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -24,8 +23,11 @@ public class OAuthHandler {
 
     private static final List<String> CODE_REQUEST_PARAMS = List.of("response_type", "client_id", "redirect_uri", "scope", "state");
 
+
+
     // /oauth/token fetches the access token
-    public Mono<ServerResponse> handleAuthCodeExchange(final ServerRequest request, Principal principal) {
+    public Mono<ServerResponse> handleAuthCodeExchange(final ServerRequest request) {
+
         String grantType = request.queryParam("grant_type").orElseThrow(requiredParamNotPresent("grant_type"));
         String code = request.queryParam("code").orElseThrow(requiredParamNotPresent("code"));
         String redirect_uri = request.queryParam("redirect_uri").orElseThrow(requiredParamNotPresent("redirect_uri"));
@@ -33,7 +35,9 @@ public class OAuthHandler {
         String challenge_code = request.queryParam("challenge_code").get(); // TODO add handle for client secret
         String challengeVerfication = request.queryParam("challenge_verification_method").orElse("plain");
 
-        return verificationService.issueTokenByPkce(principal.getName(), grantType, code, redirect_uri, client_id, challenge_code, challengeVerfication)
+        return request.principal()
+                .map( princ -> princ.getName())
+                .flatMap( username -> verificationService.issueTokenByPkce(username, grantType, code, redirect_uri, client_id, challenge_code, challengeVerfication))
                 .flatMap( jwtToken -> ok().body(BodyInserters.fromObject(jwtToken)));
     }
 
